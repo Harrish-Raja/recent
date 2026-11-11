@@ -33,6 +33,16 @@ def _client(store_path):
                                      settings=chromadb.Settings(anonymized_telemetry=False))
 
 
+def _embedding_text(record):
+    """The passage as it is embedded: led by its document's title.
+
+    Playbooks share section headings ("3. The first hour"), so a passage on its own does not
+    say which playbook it belongs to. The stored text stays exactly as cut from the document.
+    """
+    title = os.path.splitext(str(record["document_name"]))[0].replace("-", " ")
+    return f"{title}: {record['chunk_text']}"
+
+
 def build_vector_index(chunk_records, store_path, collection_name):
     """Embed every passage and store it under its own identifier, replacing any earlier build."""
     os.makedirs(store_path, exist_ok=True)
@@ -47,6 +57,8 @@ def build_vector_index(chunk_records, store_path, collection_name):
         batch = chunk_records[start:start + _BATCH_SIZE]
         collection.add(ids=[str(record["chunk_id"]) for record in batch],
                        documents=[str(record["chunk_text"]) for record in batch],
+                       embeddings=_embedding_function()([_embedding_text(record)
+                                                         for record in batch]),
                        metadatas=[{"document_name": str(record["document_name"])}
                                   for record in batch])
     return collection.count()

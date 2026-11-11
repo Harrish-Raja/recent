@@ -65,7 +65,10 @@ def answer_from_documents(collection, question_text, conversation):
     if question_type == config.CHAT_TYPE_INCIDENT_STATUS:
         return dict(base, question_type=question_type, incident_reference=reference,
                     answer="", source_documents=[], was_refused=False)
-    if (question_type in config.CHAT_ANSWERED_TYPES
+    answer_text = fields["ANSWER"].strip()
+    declined = (not answer_text
+                or config.CHAT_REFUSAL_MESSAGE.split(".")[0].lower() in answer_text.lower())
+    if (question_type in config.CHAT_ANSWERED_TYPES and not declined
             and closest <= config.CHAT_MAX_RELEVANCE_DISTANCE):
         sources = []
         for passage in passages:

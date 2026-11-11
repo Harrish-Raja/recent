@@ -1,0 +1,148 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:1920px;height:1080px;background:#F6F7F9;font-family:'Segoe UI',Arial,sans-serif;color:#1B2433}
+.wrap{padding:36px 40px 28px;height:100%;display:flex;flex-direction:column;gap:22px}
+header{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:2px solid #E1E5EB;padding-bottom:16px}
+h1{font-size:38px;font-weight:700;letter-spacing:-.5px}
+h1 span{color:#5B6B82;font-weight:400}
+.sub{font-size:17px;color:#5B6B82;text-align:right;line-height:1.45}
+.main{flex:1;display:flex;gap:0;align-items:stretch}
+.col{display:flex;flex-direction:column;background:#fff;border:1px solid #E1E5EB;border-radius:14px;overflow:hidden;box-shadow:0 1px 3px rgba(20,30,50,.06)}
+.col .hd{padding:14px 18px;color:#fff;font-weight:700;font-size:19px;letter-spacing:.3px;display:flex;justify-content:space-between;align-items:center}
+.col .hd small{font-weight:600;font-size:13px;opacity:.85;letter-spacing:1px}
+.col .bd{padding:16px;display:flex;flex-direction:column;gap:13px;flex:1}
+.box{border-radius:10px;padding:12px 14px;font-size:17px;line-height:1.35;border:1px solid}
+.box b{display:block;font-size:18.5px;margin-bottom:3px}
+.box i{font-style:normal;color:#56657A;font-size:15.5px}
+.lbl{font-size:14px;font-weight:700;letter-spacing:1.2px;color:#7A889C;text-transform:uppercase;margin-top:2px}
+.arrow{width:34px;display:flex;align-items:center;justify-content:center;flex:none}
+.down{text-align:center;color:#9AA6B6;font-size:15px;line-height:1;margin:-5px 0}
+/* palettes */
+.c1 .hd{background:#4A5568}.c1 .box{background:#F3F5F8;border-color:#DCE1E8}
+.c2 .hd{background:#2B6CB0}.c2 .box{background:#EEF4FB;border-color:#CFE0F3}
+.c3 .hd{background:#2C7A7B}.c3 .box{background:#EDF7F6;border-color:#C9E6E3}
+.c4 .hd{background:#553C9A}.c4 .box{background:#F3F0FA;border-color:#DDD4F1}
+.c5 .hd{background:#C05621}.c5 .box{background:#FDF3EC;border-color:#F4D7C3}
+.gate{background:#FFF7E6!important;border:2px dashed #D69E2E!important}
+.store{border-style:dashed!important;border-width:1.5px!important}
+.agent{position:relative;padding-left:46px!important}
+.agent em{position:absolute;left:10px;top:50%;transform:translateY(-50%);width:26px;height:26px;border-radius:50%;background:#553C9A;color:#fff;font-style:normal;font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.wf{display:grid;grid-template-columns:1fr 1fr;gap:14px;flex:1}
+.wf>div{display:flex;flex-direction:column;gap:9px}
+.branch{font-size:14.5px;color:#553C9A;font-weight:600;padding:2px 0}
+footer{display:flex;justify-content:space-between;align-items:center;font-size:14.5px;color:#5B6B82}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{background:#fff;border:1px solid #E1E5EB;border-radius:999px;padding:5px 12px;font-weight:600;color:#3A4659}
+.legend{display:flex;gap:18px;align-items:center}
+.legend span{display:flex;align-items:center;gap:6px}
+.sw{width:22px;height:14px;border-radius:4px;border:1px solid #CBD2DC;background:#fff}
+</style></head>
+<body><div class="wrap">
+<header>
+  <h1>BreachWatch AI <span>· System Architecture</span></h1>
+  <div class="sub">Incident triage &amp; breach-reporting platform<br>ML · RAG · LangGraph agents · Human-in-the-loop approval</div>
+</header>
+
+<div class="main">
+  <!-- 1 Sources -->
+  <div class="col c1" style="width:250px">
+    <div class="hd">Data Sources <small>01</small></div>
+    <div class="bd">
+      <div class="box"><b>Security incidents</b><i>train + eval CSV · 39k rows</i></div>
+      <div class="box"><b>Containment effort</b><i>train + eval CSV · 36k rows</i></div>
+      <div class="box"><b>Analyst notes</b><i>free-text CSV · 35k rows</i></div>
+      <div class="box"><b>Open incident queue</b><i>live incidents + notes</i></div>
+      <div class="box"><b>Policy documents</b><i>16 PDFs: procedures, playbooks, standards</i></div>
+      <div class="box store"><b>.env</b><i>Gemini API key + model</i></div>
+    </div>
+  </div>
+  <div class="arrow"><svg width="26" height="26" viewBox="0 0 26 26"><path d="M4 13h15M13 6l7 7-7 7" stroke="#9AA6B6" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+
+  <!-- 2 Data & Knowledge -->
+  <div class="col c2" style="width:320px">
+    <div class="hd">Data &amp; Knowledge <small>02</small></div>
+    <div class="bd">
+      <div class="lbl">Data pipeline</div>
+      <div class="box"><b>Clean &amp; validate</b><i>de-duplicate · timestamps → UTC · text → numbers · range checks</i></div>
+      <div class="down">▼</div>
+      <div class="box"><b>Feature builder</b><i>fixed feature schemas for training &amp; scoring</i></div>
+      <div class="box store"><b>Processed CSVs + quality report</b><i>104,952 clean rows · 0 missing cells</i></div>
+      <div class="lbl" style="margin-top:6px">Knowledge indexing</div>
+      <div class="box"><b>PDF extract → chunk</b><i>126 sections · 143 passages</i></div>
+      <div class="down">▼</div>
+      <div class="box"><b>Embed</b><i>sentence-transformers all-MiniLM-L6-v2</i></div>
+      <div class="box store"><b>ChromaDB vector store</b><i>cosine similarity search</i></div>
+    </div>
+  </div>
+  <div class="arrow"><svg width="26" height="26" viewBox="0 0 26 26"><path d="M4 13h15M13 6l7 7-7 7" stroke="#9AA6B6" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+
+  <!-- 3 Intelligence -->
+  <div class="col c3" style="width:320px">
+    <div class="hd">Intelligence <small>03</small></div>
+    <div class="bd">
+      <div class="lbl">ML models · scikit-learn</div>
+      <div class="box"><b>Harm model</b><i>HistGradientBoosting classifier · AUC 0.885</i></div>
+      <div class="box"><b>Effort model</b><i>HistGradientBoosting regressor · R² 0.731</i></div>
+      <div class="box"><b>Attack model (NLP)</b><i>TF-IDF + LinearSVC · 8 types · F1 0.881</i></div>
+      <div class="lbl" style="margin-top:6px">Agent tools</div>
+      <div class="box"><b>Incident data tools</b><i>profile · notes · campaign</i></div>
+      <div class="box"><b>Prediction tools</b><i>harm band · attack · effort</i></div>
+      <div class="box"><b>Deadline tools</b><i>applicable procedures · reporting clocks</i></div>
+      <div class="box"><b>Retrieval tools</b><i>reporting duties · customer steps</i></div>
+    </div>
+  </div>
+  <div class="arrow"><svg width="26" height="26" viewBox="0 0 26 26"><path d="M4 13h15M13 6l7 7-7 7" stroke="#9AA6B6" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+
+  <!-- 4 Agentic -->
+  <div class="col c4" style="width:520px">
+    <div class="hd">Agentic Workflow · LangGraph + Gemini <small>04</small></div>
+    <div class="bd">
+      <div class="wf">
+        <div>
+          <div class="lbl">Assessment</div>
+          <div class="box"><b>Load incident context</b><i>facts from tools</i></div>
+          <div class="box agent"><em>1</em><b>Intake planner</b><i>plans the assessment</i></div>
+          <div class="box agent"><em>2</em><b>Harm analyst</b><i>risk to individuals</i></div>
+          <div class="box agent"><em>3</em><b>Attack analyst</b><i>attack type &amp; campaign</i></div>
+          <div class="box agent"><em>4</em><b>Reporting duty advisor</b><i>who, what, by when</i></div>
+          <div class="box agent"><em>5</em><b>Incident writer</b><i>composes recommendation</i></div>
+        </div>
+        <div>
+          <div class="lbl">Decision &amp; filing</div>
+          <div class="box gate"><b>⏸ DPO decision</b><i>human-in-the-loop interrupt · nothing is filed before approval</i></div>
+          <div class="branch">→ Regulator + customers</div>
+          <div class="box agent"><em>6</em><b>Customer notice</b><i>no internal details</i></div>
+          <div class="branch">→ Regulator</div>
+          <div class="box agent"><em>7</em><b>Regulator filing</b><i>sets final report date</i></div>
+          <div class="branch">→ Record only</div>
+          <div class="box"><b>Record outcome</b><i>status, documents, cost</i></div>
+          <div class="box store"><b>SQLite checkpoints</b><i>pause &amp; resume without re-running agents</i></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="arrow"><svg width="26" height="26" viewBox="0 0 26 26"><path d="M4 13h15M13 6l7 7-7 7" stroke="#9AA6B6" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+
+  <!-- 5 Delivery -->
+  <div class="col c5" style="width:310px">
+    <div class="hd">Service &amp; Experience <small>05</small></div>
+    <div class="bd">
+      <div class="box"><b>FastAPI REST API</b><i>queue · incidents · assessments · decisions · chat</i></div>
+      <div class="box"><b>Auth &amp; RBAC</b><i>PBKDF2-SHA256 passwords · session tokens · role permissions</i></div>
+      <div class="box"><b>Response assistant</b><i>RAG chat over policies + conversation memory</i></div>
+      <div class="box store"><b>SQLite app database</b><i>users · incidents · assessments · model calls · chat</i></div>
+      <div class="down">▼</div>
+      <div class="box"><b>Streamlit dashboard</b><i>Incident queue · Incident detail · Decision queue · Audit trail · Response chat</i></div>
+      <div class="lbl" style="margin-top:4px">End users</div>
+      <div class="box"><b>Security Analyst · DPO · Communications</b></div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div class="chips"><span class="chip">Python</span><span class="chip">pandas</span><span class="chip">scikit-learn</span><span class="chip">ChromaDB</span><span class="chip">sentence-transformers</span><span class="chip">LangGraph</span><span class="chip">Google Gemini</span><span class="chip">FastAPI</span><span class="chip">Streamlit</span><span class="chip">SQLite · SQLAlchemy</span></div>
+  <div class="legend"><span><span class="sw"></span>Component</span><span><span class="sw" style="border-style:dashed"></span>Data store</span><span><span class="sw" style="background:#FFF7E6;border:2px dashed #D69E2E"></span>Human approval</span><span><span class="sw" style="background:#553C9A;border-radius:50%;width:14px;border:none"></span>Gemini agent</span></div>
+</footer>
+</div></body></html>

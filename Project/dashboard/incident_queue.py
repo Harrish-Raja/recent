@@ -6,6 +6,13 @@ import streamlit as st
 from config import config
 from dashboard.api_client import call_service
 
+CLOCK_FILTER_ALL = "Every incident"
+CLOCK_FILTER_RUNNING = "Still running"
+CLOCK_FILTER_OVERDUE = "Deadline passed"
+CLOCK_FILTER_NONE = "No clock running"
+CLOCK_FILTER_OPTIONS = [CLOCK_FILTER_ALL, CLOCK_FILTER_RUNNING, CLOCK_FILTER_OVERDUE,
+                        CLOCK_FILTER_NONE]
+
 
 def badge(text, colour):
     return f":{colour}-badge[{text}]"
@@ -30,12 +37,30 @@ def render_incident_queue_page():
                 if not row["earliest_milestone"]["overdue"]]
     before_confirmation = [row for row in running if not row["awareness_established"]]
     columns = st.columns(5)
-    columns[0].metric("Open incidents", len(rows))
-    columns[1].metric("Deadline already passed", len(overdue))
-    columns[2].metric("Next deadline", f"{min(upcoming):.1f} h" if upcoming else "-")
-    columns[3].metric("Running before confirmation", len(before_confirmation))
-    columns[4].metric("Significant through a campaign",
-                      sum(1 for row in rows if row["significant_only_with_campaign"]))
+    columns[0].metric(":material/stacks: Open incidents", len(rows), border=True)
+    columns[1].metric(":material/alarm_off: Deadline already passed", len(overdue), border=True,
+                      help="Incidents whose earliest running reporting deadline is already "
+                           "behind the snapshot time.")
+    columns[2].metric(":material/timer: Next deadline",
+                      f"{min(upcoming):.1f} h" if upcoming else "-", border=True,
+                      help="Hours from the snapshot to the soonest deadline not yet passed.")
+    columns[3].metric(":material/hourglass_top: Running before confirmation",
+                      len(before_confirmation), border=True,
+                      help="Clocks already running although the incident is not yet confirmed.")
+    columns[4].metric(":material/campaign: Significant through a campaign",
+                      sum(1 for row in rows if row["significant_only_with_campaign"]),
+                      border=True,
+                      help="Incidents that are significant only because they belong to a "
+                           "campaign.")
+
+    clock = st.segmented_control("Clocks", CLOCK_FILTER_OPTIONS,
+                                 default=CLOCK_FILTER_ALL, key="queue_clock")
+    if clock == CLOCK_FILTER_RUNNING:
+        rows = [row for row in running if not row["earliest_milestone"]["overdue"]]
+    elif clock == CLOCK_FILTER_OVERDUE:
+        rows = overdue
+    elif clock == CLOCK_FILTER_NONE:
+        rows = [row for row in rows if not row["earliest_milestone"]]
 
     table = pd.DataFrame([{
         "Incident": row["incident_reference"],
@@ -55,7 +80,7 @@ def render_incident_queue_page():
         "Awaiting confirmation": not row["awareness_established"],
     } for row in rows])
     if table.empty:
-        st.info("No incident in this band.")
+        st.info("No incident matches this band and clock filter.")
         return
     selection = st.dataframe(
         table, hide_index=True, width="stretch", on_select="rerun",
